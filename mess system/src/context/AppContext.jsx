@@ -365,7 +365,7 @@ export const AppProvider = ({ children }) => {
   // Backend sync API base (connects to local server on localhost, and live Render backend in production)
   const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000/api'
-    : 'https://mess-management-system.onrender.com/api'; // Replace with your actual Render URL if different!
+    : 'https://smart-mess-w9jl.onrender.com/api';
 
   // Synchronize with backend database
   const fetchBackendData = async () => {

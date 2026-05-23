@@ -19,35 +19,58 @@ app.use(express.json());
 
 // Check and establish MongoDB database connection
 const mongoUri = process.env.MONGODB_URI;
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+
+// Add Mongoose global error listener to prevent uncaught promise/connection error crashes
+mongoose.connection.on('error', (err) => {
+  console.error('⚠️ MongoDB connection pool error:', err.message);
+});
 
 if (!mongoUri) {
   console.error('✗ Error: MONGODB_URI is not defined in your environment variables!');
   console.log('👉 Please go to the Environment tab in Render and add MONGODB_URI with your MongoDB Atlas connection string.');
-} else {
-  console.log('Initiating database connection to:', mongoUri.replace(/:([^@]+)@/, ':****@'));
-}
-
-const connectionUri = mongoUri || 'mongodb://127.0.0.1:27017/mess_db';
-
-mongoose.connect(connectionUri)
-  .then(async () => {
-    console.log('✓ Successfully connected to MongoDB Database!');
-    await seedDatabaseIfNeeded();
-  })
-  .catch((err) => {
-    console.error('✗ MongoDB Atlas connection failed:', err.message);
-    console.log('👉 Attempting fallback to local MongoDB instance: mongodb://127.0.0.1:27017/mess_db');
-    
+  
+  if (isProduction) {
+    console.log('⚠️ Running on Render/Production without MongoDB. Server will operate in API mock state to prevent startup crashes.');
+  } else {
+    console.log('👉 Attempting connection to local MongoDB instance: mongodb://127.0.0.1:27017/mess_db');
     mongoose.connect('mongodb://127.0.0.1:27017/mess_db')
       .then(async () => {
         console.log('✓ Connected successfully to local fallback MongoDB instance!');
         await seedDatabaseIfNeeded();
       })
       .catch((localErr) => {
-        console.error('✗ Local MongoDB fallback failed too:', localErr.message);
+        console.error('✗ Local MongoDB fallback failed:', localErr.message);
         console.log('⚠️ Server will operate in API mock state. Please verify your MongoDB service status.');
       });
-  });
+  }
+} else {
+  console.log('Initiating database connection to:', mongoUri.replace(/:([^@]+)@/, ':****@'));
+  
+  mongoose.connect(mongoUri)
+    .then(async () => {
+      console.log('✓ Successfully connected to MongoDB Database!');
+      await seedDatabaseIfNeeded();
+    })
+    .catch((err) => {
+      console.error('✗ MongoDB connection failed:', err.message);
+      
+      if (isProduction) {
+        console.log('⚠️ Running in Production/Render. Server will operate in API mock state without database connection to prevent startup crashes.');
+      } else {
+        console.log('👉 Attempting fallback to local MongoDB instance: mongodb://127.0.0.1:27017/mess_db');
+        mongoose.connect('mongodb://127.0.0.1:27017/mess_db')
+          .then(async () => {
+            console.log('✓ Connected successfully to local fallback MongoDB instance!');
+            await seedDatabaseIfNeeded();
+          })
+          .catch((localErr) => {
+            console.error('✗ Local MongoDB fallback failed too:', localErr.message);
+            console.log('⚠️ Server will operate in API mock state. Please verify your MongoDB service status.');
+          });
+      }
+    });
+}
 
 // --- HELPER DUMMY DATA SEEDER & MOCK DATABASE IN-MEMORY TABLES ---
 

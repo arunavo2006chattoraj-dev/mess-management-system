@@ -362,8 +362,10 @@ export const AppProvider = ({ children }) => {
     return localStorage.getItem('mess_theme') || 'dark';
   });
 
-  // Backend sync API base
-  const API_BASE = 'http://localhost:5000/api';
+  // Backend sync API base (connects to local server on localhost, and live Render backend in production)
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api'
+    : 'https://mess-management-system.onrender.com/api'; // Replace with your actual Render URL if different!
 
   // Synchronize with backend database
   const fetchBackendData = async () => {

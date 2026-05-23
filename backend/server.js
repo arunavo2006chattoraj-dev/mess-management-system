@@ -20,9 +20,16 @@ app.use(express.json());
 // Check and establish MongoDB database connection
 const mongoUri = process.env.MONGODB_URI;
 
-console.log('Initiating database connection to:', mongoUri.replace(/:([^@]+)@/, ':****@'));
+if (!mongoUri) {
+  console.error('✗ Error: MONGODB_URI is not defined in your environment variables!');
+  console.log('👉 Please go to the Environment tab in Render and add MONGODB_URI with your MongoDB Atlas connection string.');
+} else {
+  console.log('Initiating database connection to:', mongoUri.replace(/:([^@]+)@/, ':****@'));
+}
 
-mongoose.connect(mongoUri)
+const connectionUri = mongoUri || 'mongodb://127.0.0.1:27017/mess_db';
+
+mongoose.connect(connectionUri)
   .then(async () => {
     console.log('✓ Successfully connected to MongoDB Database!');
     await seedDatabaseIfNeeded();

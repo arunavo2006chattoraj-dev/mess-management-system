@@ -338,6 +338,21 @@ async function seedDatabaseIfNeeded() {
   }
 }
 
+app.get('/', (appReq, appRes) => {
+  appRes.json({
+    status: "online",
+    message: "Co-Mess Hub API Backend is live and broadcasting! 📡",
+    database: mongoose.connection.readyState === 1 ? "Connected to MongoDB Atlas 🟢" : "Disconnected (Running Mock State) 🔴",
+    endpoints: {
+      menu: "/api/menu",
+      reviews: "/api/reviews",
+      discussions: "/api/discussions",
+      polls: "/api/polls",
+      users: "/api/users"
+    }
+  });
+});
+
 // --- SECURE AUTHENTICATION ENDPOINTS ---
 
 app.post('/api/auth/signup', async (appReq, appRes) => {
